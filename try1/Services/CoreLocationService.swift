@@ -5,7 +5,7 @@ final class CoreLocationService: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
 
     var onLocationUpdated: ((CLLocation) -> Void)?
-    var onHeadingUpdated: ((Double) -> Void)?
+    var onCourseUpdated: ((Double) -> Void)?
     var onError: ((String) -> Void)?
 
     override init() {
@@ -18,7 +18,6 @@ final class CoreLocationService: NSObject, CLLocationManagerDelegate {
     func start() {
         manager.requestWhenInUseAuthorization()
         manager.startUpdatingLocation()
-        // visionOS does not reliably expose heading APIs; use course from location updates instead.
     }
 
     func stop() {
@@ -29,10 +28,8 @@ final class CoreLocationService: NSObject, CLLocationManagerDelegate {
         guard let location = locations.last else { return }
         onLocationUpdated?(location)
 
-        // Use movement direction when available (degrees from true north).
-        // course is < 0 when invalid.
         if location.course >= 0 {
-            onHeadingUpdated?(location.course)
+            onCourseUpdated?(location.course)
         }
     }
 

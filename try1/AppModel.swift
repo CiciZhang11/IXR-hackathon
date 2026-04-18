@@ -1,97 +1,65 @@
-//
-//  AppModel.swift
-//  try1
-//
-//  Created by iguest on 4/18/26.
-//
-
 import CoreLocation
 import SwiftUI
 
-/// Maintains app-wide state
 @MainActor
 @Observable
-class AppModel {
+final class AppModel {
     let immersiveSpaceID = "ImmersiveSpace"
+
     enum ImmersiveSpaceState {
         case closed
         case inTransition
         case open
     }
-    var immersiveSpaceState = ImmersiveSpaceState.closed
 
-    // MARK: - Services
+    var immersiveSpaceState: ImmersiveSpaceState = .closed
 
-    private let locationService = FirebaseLocationService()
+    private let firebaseService = FirebaseLocationService()
     private let coreLocationService = CoreLocationService()
 
-    // MARK: - Raw location state
-
-    /// Latest parsed remote phone location from Firebase.
     var remoteLocation: DeviceLocation?
-
-    /// Latest local Vision Pro location from CoreLocation.
     var localLocation: CLLocation?
+    var localCourseDegrees: Double?
 
-    /// Latest local heading in degrees (true heading when available).
-    var localHeadingDegrees: Double?
-
-    // MARK: - Derived arrow state
-
-    /// Distance from Vision Pro to phone in meters.
     var targetDistanceMeters: Double?
-
-    /// Relative bearing for arrow UI: 0 = straight ahead, +right / -left.
     var targetRelativeBearingDegrees: Double?
 
-    /// Human-readable stream status for diagnostics.
     var locationStreamStatus: String = "idle"
-
-    /// Latest listener/parsing error text (nil when healthy).
     var locationErrorMessage: String?
-
-    /// Local receipt time for staleness checks / "last updated" labels.
     var lastLocationUpdateAt: Date?
 
-    private var isPipelineStarted = false
+    private var isListening = false
 
     init() {
         wireFirebase()
         wireCoreLocation()
     }
 
-    /// Starts both Firebase and CoreLocation pipelines.
     func startLocationListening() {
-        guard !isPipelineStarted else { return }
-        isPipelineStarted = true
-
+        guard !isListening else { return }
+        isListening = true
         locationStreamStatus = "connecting"
         locationErrorMessage = nil
 
         coreLocationService.start()
-        locationService.startListening()
+        firebaseService.startListening()
     }
 
-    /// Stops all listeners and marks stream idle.
     func stopLocationListening() {
-        guard isPipelineStarted else { return }
-        isPipelineStarted = false
-
-        locationService.stopListening()
+        guard isListening else { return }
+        isListening = false
         coreLocationService.stop()
-
+        firebaseService.stopListening()
         locationStreamStatus = "idle"
     }
 
     deinit {
-        locationService.stopListening()
         coreLocationService.stop()
+        firebaseService.stopListening()
     }
 
-    // MARK: - Wiring
-
     private func wireFirebase() {
-        locationService.onUpdate = { [weak self] location in
+        firebaseService.onUpdate = { [weak self] location in
             guard let self else { return }
             Task { @MainActor in
                 self.remoteLocation = location
@@ -102,7 +70,7 @@ class AppModel {
             }
         }
 
-        locationService.onError = { [weak self] message in
+        firebaseService.onError = { [weak self] message in
             guard let self else { return }
             Task { @MainActor in
                 self.locationErrorMessage = "Firebase: \(message)"
@@ -116,14 +84,15 @@ class AppModel {
             guard let self else { return }
             Task { @MainActor in
                 self.localLocation = location
+                self.locationStreamStatus = self.locationStreamStatus == "idle" ? "connecting" : self.locationStreamStatus
                 self.recomputeTargetVector()
             }
         }
 
-        coreLocationService.onHeadingUpdated = { [weak self] headingDegrees in
+        coreLocationService.onCourseUpdated = { [weak self] courseDegrees in
             guard let self else { return }
             Task { @MainActor in
-                self.localHeadingDegrees = headingDegrees
+                self.localCourseDegrees = courseDegrees
                 self.recomputeTargetVector()
             }
         }
@@ -137,8 +106,6 @@ class AppModel {
         }
     }
 
-    // MARK: - Distance/Bearing math
-
     private func recomputeTargetVector() {
         guard let local = localLocation, let remote = remoteLocation else {
             targetDistanceMeters = nil
@@ -146,18 +113,13 @@ class AppModel {
             return
         }
 
-        let remoteCL = CLLocation(latitude: remote.lat, longitude: remote.lon)
-        targetDistanceMeters = local.distance(from: remoteCL)
+        let remoteLocation = CLLocation(latitude: remote.lat, longitude: remote.lon)
+        targetDistanceMeters = local.distance(from: remoteLocation)
 
-        let absoluteBearing = Self.initialBearingDegrees(
-            from: local.coordinate,
-            to: remoteCL.coordinate
-        )
-
-        if let heading = localHeadingDegrees {
-            targetRelativeBearingDegrees = Self.normalizeSignedDegrees(absoluteBearing - heading)
+        let absoluteBearing = Self.initialBearingDegrees(from: local.coordinate, to: remoteLocation.coordinate)
+        if let course = localCourseDegrees {
+            targetRelativeBearingDegrees = Self.normalizeSignedDegrees(absoluteBearing - course)
         } else {
-            // Fallback if heading is unavailable yet.
             targetRelativeBearingDegrees = absoluteBearing
         }
     }
@@ -171,15 +133,13 @@ class AppModel {
         let dLon = lon2 - lon1
         let y = sin(dLon) * cos(lat2)
         let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
-        let radians = atan2(y, x)
-        let deg = radians * 180.0 / .pi
-        return normalizeSignedDegrees(deg)
+        return normalizeSignedDegrees(atan2(y, x) * 180.0 / .pi)
     }
 
-    private static func normalizeSignedDegrees(_ value: Double) -> Double {
-        var v = value.truncatingRemainder(dividingBy: 360.0)
-        if v > 180.0 { v -= 360.0 }
-        if v < -180.0 { v += 360.0 }
-        return v
+    private static func normalizeSignedDegrees(_ degrees: Double) -> Double {
+        var value = degrees.truncatingRemainder(dividingBy: 360.0)
+        if value > 180.0 { value -= 360.0 }
+        if value < -180.0 { value += 360.0 }
+        return value
     }
 }
