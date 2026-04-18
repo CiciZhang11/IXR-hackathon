@@ -1,16 +1,11 @@
-//
-//  ContentView.swift
-//  try1
-//
-//  Created by iguest on 4/18/26.
-//
-
 import SwiftUI
 import RealityKit
 import RealityKitContent
 
 struct ContentView: View {
-
+    // Access the AppModel so we can change the sound setting
+    @Environment(AppModel.self) var appModel
+    
     @State private var enlarge = false
 
     var body: some View {
@@ -31,7 +26,18 @@ struct ContentView: View {
         })
         .toolbar {
             ToolbarItemGroup(placement: .bottomOrnament) {
-                VStack (spacing: 12) {
+                VStack (spacing: 16) {
+                    
+                    // NEW: The scrolling Picker to select soundtracks
+                    @Bindable var appModelBindable = appModel
+                    Picker("Select Sound", selection: $appModelBindable.selectedSound) {
+                        ForEach(appModel.availableSounds, id: \.self) { sound in
+                            Text(sound).tag(sound)
+                        }
+                    }
+                    .pickerStyle(.menu) // Makes it a nice pinchable dropdown
+                    .frame(width: 250)
+                    
                     Button {
                         enlarge.toggle()
                     } label: {
@@ -42,6 +48,7 @@ struct ContentView: View {
 
                     ToggleImmersiveSpaceButton()
                 }
+                .padding(.vertical, 8) // Gives the menu a little breathing room
             }
         }
     }
