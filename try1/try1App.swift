@@ -11,10 +11,11 @@ import FirebaseCore
 @main
 struct try1App: App {
 
-    @State private var appModel = AppModel()
-    
+    @State private var appModel: AppModel
+
     init() {
         FirebaseApp.configure()
+        _appModel = State(initialValue: AppModel())
     }
 
     var body: some Scene {

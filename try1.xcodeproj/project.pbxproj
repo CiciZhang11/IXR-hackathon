@@ -10,6 +10,7 @@
 		9D49100B2F93F607000DCB3C /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 9D49100A2F93F607000DCB3C /* RealityKitContent */; };
 		DB4AA44F2F942C000012650B /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DB4AA44E2F942C000012650B /* FirebaseCore */; };
 		DB4AA4512F942C000012650B /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = DB4AA4502F942C000012650B /* FirebaseDatabase */; };
+		DB4AA4EF2F94635F0012650B /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DB4AA4EE2F94635F0012650B /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,6 +27,7 @@
 		9D4910052F93F607000DCB3C /* try1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = try1.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D4910092F93F607000DCB3C /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		9D4910192F93F608000DCB3C /* try1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = try1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DB4AA4EE2F94635F0012650B /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -78,6 +80,7 @@
 		9D490FFC2F93F607000DCB3C = {
 			isa = PBXGroup;
 			children = (
+				DB4AA4EE2F94635F0012650B /* GoogleService-Info.plist */,
 				9D4910072F93F607000DCB3C /* try1 */,
 				9D4910082F93F607000DCB3C /* Packages */,
 				9D49101C2F93F608000DCB3C /* try1Tests */,
@@ -200,6 +203,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB4AA4EF2F94635F0012650B /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +249,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H2VK7CHZT7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
@@ -273,6 +278,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H2VK7CHZT7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
