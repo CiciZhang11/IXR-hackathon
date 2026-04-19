@@ -1,54 +1,63 @@
 import SwiftUI
 import RealityKit
-import RealityKitContent
 
 struct ContentView: View {
-    // Access the AppModel so we can change the sound setting
     @Environment(AppModel.self) var appModel
     
-    @State private var enlarge = false
+    // This environment variable lets us launch the 3D space programmatically
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
 
     var body: some View {
-        RealityView { content in
-            // Add the initial RealityKit content
-            if let scene = try? await Entity(named: "Scene", in: realityKitContentBundle) {
-                content.add(scene)
-            }
-        } update: { content in
-            // Update the RealityKit content when SwiftUI state changes
-            if let scene = content.entities.first {
-                let uniformScale: Float = enlarge ? 1.4 : 1.0
-                scene.transform.scale = [uniformScale, uniformScale, uniformScale]
-            }
+        VStack(spacing: 20) {
+            Text("Radar Controls")
+                .font(.title)
+                .fontWeight(.bold)
+            
+            Text("Follow the glowing arrow.")
+                .foregroundStyle(.secondary)
         }
-        .gesture(TapGesture().targetedToAnyEntity().onEnded { _ in
-            enlarge.toggle()
-        })
+        .padding(40)
+        // The Glass UI Ornament!
+        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) {
+            VStack(spacing: 4) {
+                Text("SIGNAL STRENGTH")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                
+                // Color changes dynamically based on strength!
+                Text("\(appModel.signalPercentage)%")
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .foregroundStyle(appModel.signalPercentage > 80 ? .green : .primary)
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16)
+            .glassBackgroundEffect() // Native frosted glass look
+        }
         .toolbar {
             ToolbarItemGroup(placement: .bottomOrnament) {
-                VStack (spacing: 16) {
+                HStack(spacing: 24) {
                     
-                    // NEW: The scrolling Picker to select soundtracks
+                    // Tool 1: The Sound Picker
                     @Bindable var appModelBindable = appModel
-                    Picker("Select Sound", selection: $appModelBindable.selectedSound) {
+                    Picker("Sound", selection: $appModelBindable.selectedSound) {
                         ForEach(appModel.availableSounds, id: \.self) { sound in
                             Text(sound).tag(sound)
                         }
                     }
-                    .pickerStyle(.menu) // Makes it a nice pinchable dropdown
-                    .frame(width: 250)
+                    .pickerStyle(.menu)
                     
-                    Button {
-                        enlarge.toggle()
-                    } label: {
-                        Text(enlarge ? "Reduce RealityView Content" : "Enlarge RealityView Content")
-                    }
-                    .animation(.none, value: 0)
-                    .fontWeight(.semibold)
-
+                    // Tool 2: The Immersion Mode Toggle
                     ToggleImmersiveSpaceButton()
                 }
-                .padding(.vertical, 8) // Gives the menu a little breathing room
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+        }
+        .task {
+            // Auto-launch the 3D arrow space the moment the app opens
+            if appModel.immersiveSpaceState == .closed {
+                await openImmersiveSpace(id: appModel.immersiveSpaceID)
             }
         }
     }

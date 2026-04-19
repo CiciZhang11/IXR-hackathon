@@ -19,4 +19,6 @@ class AppModel {
     // These correspond exactly to the hidden .caf files on Apple devices
     var selectedSound = "Tink"
     let availableSounds = ["Tink", "Tock", "Pop", "Modern_beep"]
+    
+    var signalPercentage: Int = 0
 }
